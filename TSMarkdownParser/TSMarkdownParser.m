@@ -88,13 +88,7 @@
     [defaultParser addLinkParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
         [attributedString addAttributes:weakParser.linkAttributes range:range];
     }];
-    
-    /* autodetection */
-    
-    [defaultParser addLinkDetectionWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
-        [attributedString addAttributes:weakParser.linkAttributes range:range];
-    }];
-    
+  
     /* inline parsing */
     
     [defaultParser addStrongParsingWithFormattingBlock:^(NSMutableAttributedString *attributedString, NSRange range) {
@@ -293,19 +287,6 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
 
 - (void)addEmphasisParsingWithFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock {
     [self addEnclosedParsingWithPattern:TSMarkdownEmRegex formattingBlock:formattingBlock];
-}
-
-#pragma mark link detection
-
-- (void)addLinkDetectionWithFormattingBlock:(TSMarkdownParserFormattingBlock)formattingBlock {
-    NSDataDetector *linkDataDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:nil];
-    [self addParsingRuleWithRegularExpression:linkDataDetector block:^(NSTextCheckingResult *match, NSMutableAttributedString *attributedString) {
-        NSString *linkURLString = [attributedString.string substringWithRange:match.range];
-        [attributedString addAttribute:NSLinkAttributeName
-                                        value:[NSURL URLWithString:linkURLString]
-                                        range:match.range];
-        formattingBlock(attributedString, match.range);
-    }];
 }
 
 #pragma mark unescaping parsing
