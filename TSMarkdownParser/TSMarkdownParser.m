@@ -132,7 +132,7 @@ static NSString *const TSMarkdownShortQuoteRegex    = @"^(\\>{1,%@})\\s*([^\\>].
 
 // inline bracket regex
 static NSString *const TSMarkdownImageRegex         = @"\\!\\[.*?\\]\\(\\S*\\)";
-static NSString *const TSMarkdownLinkRegex          = @"\\[[^\\[]*?\\]\\([^\\)]*\\)";
+static NSString *const TSMarkdownLinkRegex          = @"\\[[^\\[]*?\\]\\s?\\([^\\)]*\\)";
 
 // inline enclosed regex
 static NSString *const TSMarkdownMonospaceRegex     = @"(`+)(\\s*.*?[^`]\\s*)(\\1)(?!`)";
@@ -246,10 +246,12 @@ static NSString *const TSMarkdownEmRegex            = @"(\\*|_)(.+?)(\\1)";
         NSURL *url = [NSURL URLWithString:linkURLString] ?: [NSURL URLWithString:
                                                              [linkURLString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
         
-        NSRange linkTextRange = NSMakeRange(match.range.location + 1, linkStartInResult - match.range.location - 2);
+        NSUInteger linkTextEndInResult = [attributedString.string rangeOfString:@"]" options:NSBackwardsSearch range:NSMakeRange(match.range.location, linkStartInResult - match.range.location)].location;
+        NSRange linkTextRange = NSMakeRange(match.range.location + 1, linkTextEndInResult - match.range.location - 1);
       
         // deleting trailing markdown
-        [attributedString deleteCharactersInRange:NSMakeRange(linkRange.location - 1, linkRange.length + 2)];
+        NSUInteger linkPrefixLength = (linkStartInResult - linkTextEndInResult) + 1;
+        [attributedString deleteCharactersInRange:NSMakeRange(linkRange.location - linkPrefixLength, linkRange.length + linkPrefixLength + 1)];
         // formatting link (may alter the length)
         if (url) {
             [attributedString addAttribute:NSLinkAttributeName
